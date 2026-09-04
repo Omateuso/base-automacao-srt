@@ -1,0 +1,118 @@
+# ============================================================================
+#  base-automatizacao - textos, gatilhos e regras
+#  Tudo que muda com frequencia fica AQUI, fora do codigo.
+#
+#  GATILHO  = o texto padrao que, sendo a ULTIMA mensagem do chamado,
+#             torna ele cobravel.
+#  RESPOSTA = o que a automacao escreve quando cobra.
+#
+#  A `assinatura` de cada gatilho e comparada com o texto normalizado
+#  (minusculo, sem acento, sem pontuacao) - por isso ela e escrita assim.
+#  Uma resposta NUNCA pode conter a assinatura de um gatilho: config.py
+#  recusa o arquivo se isso acontecer.
+# ============================================================================
+
+filtros:
+  # Tela de Alertas JA COM OS FILTROS aplicados. O robo vai direto nesta URL e
+  # le os filtros dela - sem precisar que voce selecione nada na mao.
+  # Parametros: projeto, dept, prio, tab (tab vazio = "Precisam de retorno").
+  # Deixe vazio para abrir /alertas e ajustar os filtros manualmente.
+  url_alertas: ""   # opcional: URL da tela de Alertas ja com os filtros
+
+  # Usados so quando a URL acima nao traz filtro nenhum.
+  projeto: "SRT"          # ajuste para o seu
+  departamento: "MANUTENÇÃO - SRT"   # ajuste para o seu
+
+  # Restringe pela coluna "ultima_situacao" do chamado. Deixe a lista vazia
+  # para aceitar todos os chamados que aparecem em Alertas.
+  # Valores usados pelo dashboard:
+  #   Aguardando interação do atendente
+  #   Respondido pelo cliente, aguardando resposta
+  #   Respondido, aguardando resposta do cliente
+  #   Sem atendente vinculado
+  situacoes_alvo: []
+
+  # Limite de seguranca por execucao.
+  max_chamados: 500
+
+
+# ----------------------------------------------------------------------------
+# GATILHOS: a ULTIMA mensagem do chamado precisa bater com um destes.
+# A comparacao usa o texto normalizado (sem acento, minusculo, espacos
+# colapsados, pontuacao ignorada), entao diferencas de formatacao nao quebram.
+# "assinatura" e o trecho que identifica o texto de forma inequivoca.
+# ----------------------------------------------------------------------------
+gatilhos:
+  - id: "24h"
+    horas_prazo: 24
+    assinatura: "prazo de ate 24 horas para atendimento e ja foi direcionada a equipe de manutencao"
+    texto_original: >-
+      A demanda possui prazo de até 24 horas para atendimento e já foi
+      direcionada à equipe de manutenção. Considerando que o chamado foi aberto
+      no dia de hoje, reforço a necessidade de priorização para que o reparo
+      seja realizado dentro do prazo estabelecido.Permaneço à disposição.
+
+  - id: "48h"
+    horas_prazo: 48
+    assinatura: "prazo de ate 48 horas para atendimento e ja foi devidamente direcionada a equipe de manutencao"
+    texto_original: >-
+      A demanda possui prazo de até 48 horas para atendimento e já foi
+      devidamente direcionada à equipe de manutenção.Permaneço à disposição.
+
+
+# ----------------------------------------------------------------------------
+# RESPOSTAS enviadas para cada gatilho. As quebras de linha sao preservadas
+# exatamente como escritas abaixo (bloco "|-").
+# Limite da API do TomTicket: 512 caracteres.
+# ----------------------------------------------------------------------------
+respostas:
+  "24h": |-
+    Equipe de manutenção, identificamos que a demanda já excedeu o prazo de 24 horas para atendimento. Peço, por gentileza, que seja verificada a situação e realizada a devida tratativa com prioridade.
+
+
+    Permaneço à disposição para quaisquer esclarecimentos.
+
+  "48h": |-
+    Equipe de manutenção, identificamos que a demanda já excedeu o prazo de 48 horas para atendimento. Peço, por gentileza, que seja verificada a situação e realizada a devida tratativa com prioridade.
+
+
+    Permaneço à disposição para quaisquer esclarecimentos.
+
+
+# ----------------------------------------------------------------------------
+# ANTI-DUPLICIDADE (trava principal)
+#
+# Se a ultima mensagem do chamado ja disser que o prazo foi excedido, o chamado
+# vira JA_ESCALADO e o robo NAO responde. Esta checagem roda ANTES da checagem
+# dos gatilhos, entao uma mensagem de prazo excedido nunca vira PRONTO.
+#
+# Alem destas frases, o robo deriva sozinho um trecho de cada texto da secao
+# "respostas" acima. Ou seja: ele sempre reconhece a propria cobranca que
+# enviou, mesmo que voce edite o texto e esqueca desta lista.
+# ----------------------------------------------------------------------------
+assinaturas_ja_escalado:
+  - "identificamos que a demanda ja excedeu o prazo"
+  - "ja excedeu o prazo"
+  - "excedeu o prazo de 24 horas"
+  - "excedeu o prazo de 48 horas"
+  - "prazo excedido"
+
+
+regras:
+  # true  = so cobra se o prazo (24h/48h) realmente ja tiver estourado,
+  #         contando a partir da data da mensagem-gatilho.
+  # false = cobra sempre que o texto bater (comportamento literal pedido).
+  # Nos dois casos o relatorio mostra a coluna "Prazo excedido?".
+  verificar_prazo: false
+
+  # Pausa entre envios, em segundos.
+  intervalo_entre_respostas: 2
+
+  # Mensagem usada pelo comando "fechar" (encerra chamados escolhidos por voce).
+  mensagem_fechamento: "Chamado encerrado. Permaneço à disposição para quaisquer esclarecimentos."
+
+
+# ============================================================================
+#  A base escreve por HTTP (ticket/salvarhistorico), entao a secao de
+#  seletores do Selenium que existia no projeto original nao vem junto.
+# ============================================================================

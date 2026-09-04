@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+
+# Segredos e sessoes desta maquina
+.env
+dados/

@@ -1,0 +1,18 @@
+# base-automatizacao
+#
+#   python -m pip install -r requirements.txt
+
+requests>=2.31        # todo o acesso ao dashboard e ao TomTicket
+PyYAML>=6.0           # os textos e gatilhos do config.yaml
+
+# Opcional: so para o login do TomTicket pelo NAVEGADOR (base.tomticket),
+# quando nao ha sessao guardada. Se voce ja tem o cookie de outra origem, use
+# sessao.adotar(...) e nem precisa instalar. A API oficial
+# (base.tomticket_api) nao usa navegador nenhum.
+# playwright>=1.40
+
+# Opcional: so para rodar o exemplo_web.py como esta escrito. A coleta em si
+# (base.coletor) nao depende de framework nenhum - serve igual em Flask,
+# Django ou num processo separado que grava no seu banco.
+# fastapi>=0.110
+# uvicorn>=0.27
